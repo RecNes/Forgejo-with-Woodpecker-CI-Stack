@@ -67,9 +67,9 @@ This isolates traffic and keeps internal communication secure and stable.
 Before running the stack:
 
 - Replace placeholder values such as:
-    - <postgresql ip or url>
-    - <forgejo ip or url>
-    - <woodpecker ip or url>
+    - < postgresql ip or url >
+    - < forgejo ip or url >
+    - < woodpecker ip or url >
     - OAuth client & secret keys
     - Database credentials
 - Ensure your PostgreSQL instance is reachable.
