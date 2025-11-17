@@ -1,0 +1,76 @@
+version: '3.8'
+
+networks:
+  forgejo_net:
+
+volumes:
+  forgejo_data:
+  woodpecker-server-data:
+  woodpecker-agent-config:
+
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:13  # or newer
+    container_name: Forgejo
+    restart: always
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=<postgresql ip or url>:5432
+      - FORGEJO__database__NAME=forgejo_db_name
+      - FORGEJO__database__USER=forgejo_db_user
+      - FORGEJO__database__PASSWD=forgejo_db_user_pass
+      - FORGEJO__server__ROOT_URL=http://<forgejo ip ur url>:3000/
+      - FORGEJO__actions__ENABLED=true
+    networks:
+      - forgejo_net
+    ports:
+      - "3000:3000"
+      - "222:22"
+    volumes:
+      - forgejo_data:/data
+
+  woodpecker-server:
+    image: woodpeckerci/woodpecker-server:next  # or newer
+    container_name: Woodpecker-Server
+    restart: unless-stopped
+    networks:
+      - forgejo_net
+    ports:
+      - "8001:8000"
+    volumes:
+      - woodpecker-server-data:/var/lib/woodpecker/
+    environment:
+      - WOODPECKER_OPEN=true
+      - WOODPECKER_HOST=http://<woodpecker ip ur url>:8001
+      - WOODPECKER_GITEA=true
+      - WOODPECKER_GITEA_URL=http://<forgejo ip ur url>:3000
+      - WOODPECKER_GITEA_CLIENT=<generate in forgejo>
+      - WOODPECKER_GITEA_SECRET=<generate in forgejo>
+      - WOODPECKER_ADMIN=<admin user name>
+      - WOODPECKER_SECRET=<woodpecker secret>
+      - WOODPECKER_AGENT_SECRET=<agent secret>
+      - WOODPECKER_DATABASE_DRIVER=postgres
+      - WOODPECKER_DATABASE_DATASOURCE=postgres://<woodpecker_db_user:woodpecker_db_user_pass>@<postgresql ip or url>:5432/woodpecker?sslmode=disable
+    depends_on:
+      - forgejo
+
+  woodpecker-agent:
+    depends_on:
+      woodpecker-server:
+        condition: service_healthy
+    image: woodpeckerci/woodpecker-agent:next  # or newer
+    networks:
+      - forgejo_net
+    container_name: Woodpecker-Agent
+    restart: always
+    environment:
+      - WOODPECKER_SERVER=woodpecker-server:9000
+      - WOODPECKER_SECRET=<woodpecker secret>
+      - WOODPECKER_AGENT_SECRET=<agent secret>
+      - WOODPECKER_MAX_WORKFLOWS=2
+    volumes:
+      - woodpecker-agent-config:/etc/woodpecker
+      - /var/run/docker.sock:/var/run/docker.sock
+
