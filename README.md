@@ -1,6 +1,9 @@
 # Forgejo-with-Woodpecker-CI-Stack
 Local forgejo + woodpecker CI Docker compose stack file. With this compose, you can have Forgejo and Woodpecker instances instantly.
 
+For additional information:
+[https://forgejo.org/](https://forgejo.org/)
+[https://woodpecker-ci.org/](https://woodpecker-ci.org/)
 
 # 🐳 Forgejo + Woodpecker CI – Docker Compose Setup
 
